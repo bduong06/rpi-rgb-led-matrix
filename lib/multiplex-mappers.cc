@@ -239,6 +239,66 @@ public:
   }
 };
 
+class Coreman40x20Mapper : public MultiplexMapperBase {
+public:
+  Coreman40x20Mapper(const char *name, int even_vblock_offset, int odd_vblock_offset)
+  : MultiplexMapperBase(name, 2),
+    even_vblock_offset_(even_vblock_offset),
+    odd_vblock_offset_(odd_vblock_offset) {}
+
+  void MapSinglePanel(int x, int y, int *matrix_x, int *matrix_y) const {
+    static const int tile_width = 8;
+    static const int tile_height = 5;
+    const bool is_left_check = ((x / (tile_width/2)) % 2)?1:0;
+
+    const int vert_block_is_odd = ((y / tile_height) % 2);
+
+    const int even_vblock_shift = (1 - vert_block_is_odd) * even_vblock_offset_;
+    const int odd_vblock_shitf = vert_block_is_odd * odd_vblock_offset_;
+
+    if(vert_block_is_odd){
+      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width + odd_vblock_shitf;
+    } else {
+      if(is_left_check){
+        switch(x % 8){
+	   case 7:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width - 7;
+              break;
+           case 6:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width - 5;
+              break;
+           case 5:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width - 3;
+              break;
+           case 4:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width - 1;
+              break;
+        }
+      } else {
+        switch(x % 8){
+	   case 0:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width + 7;
+              break;
+           case 1:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width + 5;
+              break;
+           case 2:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width + 3;
+              break;
+           case 3:
+      	      *matrix_x = x + ((x + even_vblock_shift) / tile_width) * tile_width + 1;
+              break;
+        }
+      }
+    }
+    *matrix_y = (y % tile_height) + tile_height * (y / (tile_height * 2));
+  }
+
+private:
+  const int even_vblock_offset_;
+  const int odd_vblock_offset_;
+};
+
 /*
  * Here is where the registration happens.
  * If you add an instance of the mapper here, it will automatically be
@@ -257,6 +317,7 @@ static MuxMapperList *CreateMultiplexMapperList() {
   result->push_back(new Kaler2ScanMapper());
   result->push_back(new ZStripeMultiplexMapper("ZStripeUneven", 8, 0));
   result->push_back(new P10MapperZ());
+  result->push_back(new Coreman40x20Mapper("Coreman40x20",8,0));
 
   return result;
 }
