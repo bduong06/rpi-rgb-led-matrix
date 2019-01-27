@@ -29,10 +29,17 @@ int DrawText(Canvas *c, const Font &font,
              int x, int y, const Color &color, const Color *background_color,
              const char *utf8_text, int extra_spacing) {
   const int start_x = x;
+  uint32_t pcp = 0;
   while (*utf8_text) {
     const uint32_t cp = utf8_next_codepoint(utf8_text);
-    x += font.DrawGlyph(c, x, y, color, background_color, cp);
+    if(pcp && is_combining_char(cp)){
+      x -= font.CharacterWidth(pcp);
+      x += font.DrawGlyph(c, x, y, color, NULL, cp);
+    } else {
+      x += font.DrawGlyph(c, x, y, color, background_color, cp);
+    }
     x += extra_spacing;
+    pcp = cp;
   }
   return x - start_x;
 }

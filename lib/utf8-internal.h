@@ -54,4 +54,14 @@ uint32_t utf8_next_codepoint(byte_iterator &it) {
   return cp;
 }
 
+bool is_combining_char(uint32_t cp) {
+  if ( cp == 0xe31 ||
+       ((cp >= 0xe34) && (cp <= 0xe3a)) ||
+       ((cp >= 0xe47) && (cp <= 0xe4e)) ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 #endif  // RPI_GRAPHICS_UTF8_H
